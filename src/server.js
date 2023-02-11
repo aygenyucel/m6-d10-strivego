@@ -1,8 +1,14 @@
 import express from "express";
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 import listEndpoints from "express-list-endpoints";
 import cors from "cors";
-import { badRequestHandler, notFoundHandler } from "./errorHandlers";
+import {
+  badRequestHandler,
+  genericErrorHandler,
+  notFoundHandler,
+} from "./errorHandlers.js";
+import usersRouter from "./api/users/index.js";
+import accommodationsRouter from "./api/accommodations/index.js";
 
 const server = express();
 const port = process.env.PORT || 3001;
@@ -13,6 +19,9 @@ server.use(cors());
 server.use(express.json());
 
 //**********ENDPOINTS *********************/
+
+server.use("/users", usersRouter);
+server.use("/accommodations", accommodationsRouter);
 
 //************ERROR HANDLERS**************/
 server.use(badRequestHandler);
