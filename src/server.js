@@ -4,8 +4,10 @@ import listEndpoints from "express-list-endpoints";
 import cors from "cors";
 import {
   badRequestHandler,
+  forbiddenErrorHandler,
   genericErrorHandler,
   notFoundHandler,
+  unauthorizedErrorHandler,
 } from "./errorHandlers.js";
 import usersRouter from "./api/users/index.js";
 import accommodationsRouter from "./api/accommodations/index.js";
@@ -26,6 +28,8 @@ server.use("/accommodations", accommodationsRouter);
 //************ERROR HANDLERS**************/
 server.use(badRequestHandler);
 server.use(notFoundHandler);
+server.use(unauthorizedErrorHandler);
+server.use(forbiddenErrorHandler);
 server.use(genericErrorHandler);
 
 //***************************************/

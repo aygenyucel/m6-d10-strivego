@@ -1,6 +1,8 @@
 import express from "express";
 import createHttpError from "http-errors";
 import AccommodationsModel from "./model.js";
+import basicAuthenticationMiddleware from "./../lib/auth/basicAuth.js";
+import hostOnlyMiddleware from "../lib/auth/hostOnly.js";
 
 const accommodationsRouter = express.Router();
 
@@ -13,14 +15,19 @@ accommodationsRouter.post("/", async (req, res, next) => {
     next(error);
   }
 });
-accommodationsRouter.get("/", async (req, res, next) => {
-  try {
-    const accommodations = await AccommodationsModel.find({});
-    res.send(accommodations);
-  } catch (error) {
-    next(error);
+accommodationsRouter.get(
+  "/",
+  basicAuthenticationMiddleware,
+  hostOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const accommodations = await AccommodationsModel.find({});
+      res.send(accommodations);
+    } catch (error) {
+      next(error);
+    }
   }
-});
+);
 accommodationsRouter.get("/:accommodationId", async (req, res, next) => {
   try {
     const accomodation = await AccommodationsModel.findById(
