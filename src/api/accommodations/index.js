@@ -6,19 +6,23 @@ import hostOnlyMiddleware from "../lib/auth/hostOnly.js";
 
 const accommodationsRouter = express.Router();
 
-accommodationsRouter.post("/", async (req, res, next) => {
-  try {
-    const newAccommodation = new AccommodationsModel(req.body);
-    const { _id } = await newAccommodation.save();
-    res.status(201).send();
-  } catch (error) {
-    next(error);
-  }
-});
-accommodationsRouter.get(
+accommodationsRouter.post(
   "/",
   basicAuthenticationMiddleware,
   hostOnlyMiddleware,
+  async (req, res, next) => {
+    try {
+      const newAccommodation = new AccommodationsModel(req.body);
+      const { _id } = await newAccommodation.save();
+      res.status(201).send();
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+accommodationsRouter.get(
+  "/",
+  basicAuthenticationMiddleware,
   async (req, res, next) => {
     try {
       const accommodations = await AccommodationsModel.find({});
@@ -28,25 +32,29 @@ accommodationsRouter.get(
     }
   }
 );
-accommodationsRouter.get("/:accommodationId", async (req, res, next) => {
-  try {
-    const accomodation = await AccommodationsModel.findById(
-      req.params.accommodationId
-    );
-    if (accomodation) {
-      res.send(accomodation);
-    } else {
-      next(
-        createHttpError(
-          404,
-          `Accomodation with id ${req.params.accommodationId} not found!`
-        )
+accommodationsRouter.get(
+  "/:accommodationId",
+  basicAuthenticationMiddleware,
+  async (req, res, next) => {
+    try {
+      const accomodation = await AccommodationsModel.findById(
+        req.params.accommodationId
       );
+      if (accomodation) {
+        res.send(accomodation);
+      } else {
+        next(
+          createHttpError(
+            404,
+            `Accomodation with id ${req.params.accommodationId} not found!`
+          )
+        );
+      }
+    } catch (error) {
+      next(error);
     }
-  } catch (error) {
-    next(error);
   }
-});
+);
 accommodationsRouter.put("/:accommodationId", async (req, res, next) => {
   try {
     const updatedAccommodation = await AccommodationsModel.findByIdAndUpdate(

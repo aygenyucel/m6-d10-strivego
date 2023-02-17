@@ -36,8 +36,6 @@ usersSchema.methods.toJSON = function () {
   return user;
 };
 
-usersSchema.methods.toJSON;
-
 usersSchema.static("checkCredentials", async function (email, password) {
   const user = await this.findOne({ email });
 
