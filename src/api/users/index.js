@@ -4,6 +4,8 @@ import basicAuthenticationMiddleware from "../lib/auth/basicAuth.js";
 import UsersModel from "./model.js";
 import AccommodationsModel from "../accommodations/model.js";
 import hostOnlyMiddleware from "../lib/auth/hostOnly.js";
+import { createAccessToken } from "../lib/auth/tools.js";
+import JWTAuthMiddleware from "../lib/auth/jwtAuth.js";
 
 const usersRouter = express.Router();
 
@@ -89,6 +91,15 @@ usersRouter.delete("/:userId", async (req, res, next) => {
   }
 });
 
+// will return your user information without the password
+usersRouter.get("/me", async (req, res, next) => {
+  try {
+  } catch (error) {
+    next(error);
+  }
+});
+
+// returns the full list of managed accommodations
 usersRouter.get(
   "/me/accommodations",
   basicAuthenticationMiddleware,
@@ -104,6 +115,9 @@ usersRouter.get(
   }
 );
 
+// expects email, password and role
+// creates a new user
+// returns a JWT token already valid
 usersRouter.post("/register", async (req, res, next) => {
   try {
   } catch (error) {
@@ -111,8 +125,21 @@ usersRouter.post("/register", async (req, res, next) => {
   }
 });
 
+// returns a JWT token
 usersRouter.post("/login", async (req, res, next) => {
   try {
+    const { email, password } = req.body;
+
+    const user = await UsersModel.checkCredentials(email, password);
+
+    if (user) {
+      const payload = { _id: user._id, role: user.role };
+
+      const accessToken = await createAccessToken(payload);
+      res.send({ accessToken });
+    } else {
+      next(createHttpError(401, "Credentials are not ok!"));
+    }
   } catch (error) {
     next(error);
   }
