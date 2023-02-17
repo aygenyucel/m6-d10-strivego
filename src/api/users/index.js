@@ -28,18 +28,29 @@ usersRouter.get("/", async (req, res, next) => {
   }
 });
 
-usersRouter.get(
-  "/me",
-  basicAuthenticationMiddleware,
-  async (req, res, next) => {
-    try {
-      const user = req.user;
-      res.send(user);
-    } catch (error) {
-      next(error);
-    }
+// usersRouter.get(
+//   "/me",
+//   basicAuthenticationMiddleware,
+//   async (req, res, next) => {
+//     try {
+//       const user = req.user;
+//       res.send(user);
+//     } catch (error) {
+//       next(error);
+//     }
+//   }
+// );
+// will return your user information without the password
+usersRouter.get("/me", JWTAuthMiddleware, async (req, res, next) => {
+  try {
+    //req.user come from JWTAuthMiddleware
+    const userId = req.user._id;
+    const user = await UsersModel.findById(userId);
+    res.send(user);
+  } catch (error) {
+    next(error);
   }
-);
+});
 
 usersRouter.get("/:userId", async (req, res, next) => {
   try {
@@ -91,18 +102,11 @@ usersRouter.delete("/:userId", async (req, res, next) => {
   }
 });
 
-// will return your user information without the password
-usersRouter.get("/me", async (req, res, next) => {
-  try {
-  } catch (error) {
-    next(error);
-  }
-});
-
 // returns the full list of managed accommodations
+
 usersRouter.get(
   "/me/accommodations",
-  basicAuthenticationMiddleware,
+  JWTAuthMiddleware,
   hostOnlyMiddleware,
   async (req, res, next) => {
     try {
@@ -120,6 +124,18 @@ usersRouter.get(
 // returns a JWT token already valid
 usersRouter.post("/register", async (req, res, next) => {
   try {
+    const { email, password } = req.body;
+    const isUser = await UsersModel.checkCredentials(email, password);
+    if (isUser) {
+      next(createHttpError(403, "User with this email already exist!"));
+    } else {
+      const newUser = new UsersModel({ email, password });
+      await newUser.save();
+      const payload = { _id: newUser._id, role: newUser.role };
+
+      const accessToken = await createAccessToken(payload);
+      res.status(201).send({ accessToken });
+    }
   } catch (error) {
     next(error);
   }
